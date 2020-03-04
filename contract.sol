@@ -1,5 +1,6 @@
-pragma solidity >=0.4.22 <0.7.0;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
+
 
 contract Tracking {
    
@@ -8,55 +9,39 @@ contract Tracking {
         string description;
         string locationX;
         string locationY;
-        uint256 index;
         address owner;
-        bool initialized;
+        string price;
     }
     
  
-   
     
     // Storage
     mapping (string => Asset) assetStorage;
     mapping (address => string) userStorage;
-    mapping (string => mapping(uint256 => string)) priceStorage;
-    string[]  prices;
-    
-    // Events
-    event AssetCreate(address account, string uuid, string manufacturer);
+    string comma = " ,";
+ 
     event RejectCreate(address account, string uuid, string message);
-    event AssetTransfer(address from, address to, string uuid);
-    event HistoryPrices(string log, string[] prices);
-    
+
     
     
     function createAsset(string  memory id, string memory name, string memory description, string memory locationX, string memory locationY, string  memory price) public {
  
-    if(assetStorage[id].initialized) {
-        emit RejectCreate(msg.sender, id, "Asset with this ID already exists.");
-        return;
-      }
+  
         address owner = msg.sender;
-        uint256 index = 0;
-        
-        
-        assetStorage[id] = Asset(name, description, locationX, locationY, index, owner, true);
-        priceStorage[id][index]= price; 
+        assetStorage[id] = Asset(name, description, locationX, locationY,  owner, price);
         userStorage[msg.sender]= id;
     }
     
     function sellAsset(string memory id, address newOwner, string  memory price) public {
  
-        Asset storage assetToTransfer = assetStorage[id];
+        Asset memory assetToTransfer = assetStorage[id];
        if(assetToTransfer.owner != msg.sender){
            
        }
-        uint256 index = assetToTransfer.index + 1;
-        
-        priceStorage[id][index]= price;
 
+        string memory priceAux2 =  strConcat(assetStorage[id].price, comma, price);
        
-        assetStorage[id] = Asset(assetToTransfer.name, assetToTransfer.description, assetToTransfer.locationX, assetToTransfer.locationY, index, newOwner, true);
+        assetStorage[id] = Asset(assetToTransfer.name, assetToTransfer.description, assetToTransfer.locationX, assetToTransfer.locationY, newOwner, priceAux2);
         userStorage[msg.sender]= "";
         userStorage[newOwner] = id;
         
@@ -65,15 +50,43 @@ contract Tracking {
         Asset memory asset= assetStorage[id];
        return asset;
     }
-     function getPriceHistory(string memory id) public{
-        Asset memory asset= assetStorage[id];
-        uint256  index = asset.index;
-        prices = new string[](index);
-        for(uint256 i= 0; i<= asset.index; i++){
-            prices.push(priceStorage[id][i]);
-        }
-        emit HistoryPrices("PRECIOS", prices);
+     function getPriceHistory(string memory id) public  view returns (string memory){
+        return assetStorage[id].price;
+     
     }
+    
+    
+    
+    
+    
+    function strConcat(string memory _a, string memory _b, string memory _c, string memory _d, string memory _e) internal returns (string memory){
+    bytes memory _ba = bytes(_a);
+    bytes memory _bb = bytes(_b);
+    bytes memory _bc = bytes(_c);
+    bytes memory _bd = bytes(_d);
+    bytes memory _be = bytes(_e);
+    string memory abcde = new string(_ba.length + _bb.length + _bc.length + _bd.length + _be.length);
+    bytes memory babcde = bytes(abcde);
+    uint k = 0;
+    for (uint256 i = 0; i < _ba.length; i++) babcde[k++] = _ba[i];
+    for (uint256 i = 0; i < _bb.length; i++) babcde[k++] = _bb[i];
+    for (uint256 i = 0; i < _bc.length; i++) babcde[k++] = _bc[i];
+    for (uint256 i = 0; i < _bd.length; i++) babcde[k++] = _bd[i];
+    for (uint256 i = 0; i < _be.length; i++) babcde[k++] = _be[i];
+    return string(babcde);
+}
+
+function strConcat(string memory _a, string memory _b, string memory _c, string memory _d) internal returns (string memory) {
+    return strConcat(_a, _b, _c, _d, "");
+}
+
+function strConcat(string memory _a, string memory  _b, string memory _c) internal returns (string memory) {
+    return strConcat(_a, _b, _c, "", "");
+}
+
+function strConcat(string memory _a, string memory _b) internal returns (string memory) {
+    return strConcat(_a, _b, "", "", "");
+}
     
     
     
